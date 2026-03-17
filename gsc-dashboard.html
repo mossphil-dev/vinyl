@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VinylBiz GSC">
+<meta name="theme-color" content="#050505">
+<title>VinylBiz GSC</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00e87a;
+    --blue: #4f8ef7;
+    --amber: #f5a623;
+    --bg: #050505;
+    --card: #0f0f0f;
+    --border: #1c1c1c;
+    --text: #f0f0f0;
+    --muted: #555;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; overscroll-behavior: none; }
+  
+  #app { min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  .header {
+    padding: calc(var(--safe-top) + 16px) 20px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5,5,5,0.95);
+    backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-brand { display: flex; flex-direction: column; }
+  .header-sub { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); font-family: 'JetBrains Mono', monospace; }
+  .header-title { font-size: 20px; font-weight: 800; color: #fff; line-height: 1.1; }
+  .header-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-align: right; }
+
+  /* Scrollable content */
+  .content { flex: 1; overflow-y: auto; padding: 0 0 calc(var(--safe-bottom) + 80px); }
+
+  /* Drop zone */
+  .drop-zone {
+    margin: 24px 16px;
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 56px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--card);
+    position: relative;
+    overflow: hidden;
+  }
+  .drop-zone.drag { border-color: var(--green); background: #0a1f14; }
+  .drop-zone::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 100%, rgba(0,232,122,0.05) 0%, transparent 70%);
+  }
+  .drop-icon { font-size: 44px; margin-bottom: 12px; display: block; }
+  .drop-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .drop-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .drop-sub strong { color: var(--green); }
+  #fileInput { display: none; }
+
+  /* How to section */
+  .how-to { margin: 0 16px 24px; background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .how-to-header { padding: 14px 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .how-to-header span { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .how-to-steps { padding: 0 16px 16px; display: none; }
+  .how-to-steps.open { display: block; }
+  .step { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--green); color: #000; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-text { font-size: 13px; color: #aaa; line-height: 1.5; padding-top: 3px; }
+
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 16px 16px; }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+  .stat-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+  .stat-value { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; font-family: 'JetBrains Mono', monospace; }
+  .stat-delta { font-size: 11px; margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+  .stat-delta.up { color: var(--green); }
+  .stat-delta.down { color: #ff4f4f; }
+  .stat-delta.neutral { color: var(--muted); }
+
+  /* Section heading */
+  .section-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 0 16px; margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Chart card */
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin: 0 16px 16px; padding: 16px; }
+  .chart-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .chart-tab { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); transition: all 0.15s; font-family: 'Syne', sans-serif; }
+  .chart-tab.active { background: var(--green); color: #000; border-color: var(--green); }
+  canvas { max-height: 180px; }
+
+  /* Table card */
+  .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin: 0 16px 16px; overflow: hidden; }
+  .table-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .table-header-title { font-size: 13px; font-weight: 700; color: #fff; }
+  .table-col-heads { display: grid; padding: 8px 16px; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+  .table-row { padding: 11px 16px; border-top: 1px solid #111; display: grid; align-items: center; transition: background 0.1s; }
+  .table-row:active { background: #1a1a1a; }
+  .row-name { font-size: 13px; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row-name.url { color: #888; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .row-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; }
+
+  /* Device pills */
+  .devices { display: flex; gap: 10px; margin: 0 16px 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .devices::-webkit-scrollbar { display: none; }
+  .device-pill { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; flex-shrink: 0; text-align: center; min-width: 110px; }
+  .device-name { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+  .device-clicks { font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+  .device-imp { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Email button */
+  .email-btn {
+    position: fixed;
+    bottom: calc(var(--safe-bottom) + 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green);
+    color: #000;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 36px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(0,232,122,0.3);
+    transition: all 0.2s;
+    white-space: nowrap;
+    z-index: 200;
+  }
+  .email-btn:active { transform: translateX(-50%) scale(0.97); }
+  .email-btn.sent { background: #1a3a2a; color: var(--green); box-shadow: none; }
+  .email-btn.loading { opacity: 0.7; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: calc(var(--safe-bottom) + 90px); left: 50%; transform: translateX(-50%);
+    background: #1a1a1a; border: 1px solid #333; color: #ccc;
+    padding: 12px 20px; border-radius: 30px; font-size: 13px;
+    z-index: 300; white-space: nowrap;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+  /* Date strip */
+  .date-strip { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 20px; overflow-x: auto; scrollbar-width: none; }
+  .date-strip::-webkit-scrollbar { display: none; }
+  .date-chip { flex-shrink: 0; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
+  .date-chip-label { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .date-chip-val { font-size: 13px; font-weight: 700; color: var(--text); }
+
+  .divider { height: 1px; background: var(--border); margin: 4px 16px 20px; }
+
+  /* Alerts */
+  .alert { margin: 0 16px 16px; border-radius: 12px; padding: 14px 16px; border: 1px solid; }
+  .alert-warn { background: #1a1200; border-color: #3a2800; }
+  .alert-good { background: #0a1f14; border-color: #1a4028; }
+  .alert-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+  .alert-warn .alert-label { color: var(--amber); }
+  .alert-good .alert-label { color: var(--green); }
+  .alert-text { font-size: 13px; color: #aaa; line-height: 1.5; }
+
+  .reset-btn { display: block; margin: 0 auto 24px; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 10px 24px; border-radius: 30px; font-size: 13px; font-family: 'Syne', sans-serif; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-brand">
+      <span class="header-sub">thevinylbiz.co.uk</span>
+      <span class="header-title">GSC Monitor</span>
+    </div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+  <div class="content" id="content">
+    <!-- Filled by JS -->
+  </div>
+</div>
+
+<script>
+const GMAIL_MCP = "https://gmail.mcp.claude.com/mcp";
+let chartInstance = null;
+let parsedData = null;
+
+// Set header date
+document.getElementById('headerDate').innerHTML = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}).replace(/ /g,'<br>');
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/"/g,''));
+    return Object.fromEntries(headers.map((h,i) => [h, vals[i] || '']));
+  });
+}
+
+function delta(a, b) {
+  if (!b || b == 0) return null;
+  return (((a - b) / b) * 100).toFixed(0);
+}
+
+function renderUpload() {
+  document.getElementById('content').innerHTML = `
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <span class="drop-icon">📊</span>
+      <div class="drop-title">Drop GSC Export</div>
+      <div class="drop-sub">Tap to select your zip file<br><strong>Search Console → Export → Download CSV</strong></div>
+    </div>
+    <input type="file" id="fileInput" accept=".zip">
+
+    <div class="how-to">
+      <div class="how-to-header" onclick="toggleHowTo()">
+        <span>📖 How to export from GSC</span>
+        <span style="margin-left:auto;color:var(--muted);font-size:18px" id="howToArrow">›</span>
+      </div>
+      <div class="how-to-steps" id="howToSteps">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Open <strong style="color:#fff">Google Search Console</strong> on your phone browser</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Tap <strong style="color:#fff">Performance → Search results</strong></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Tap the <strong style="color:#fff">↓ Export</strong> button (top right)</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text">Choose <strong style="color:#fff">Download CSV (zip)</strong></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text">Come back here and tap the box above to select the zip</div></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('fileInput').addEventListener('change', e => processFile(e.target.files[0]));
+  setupDrop();
+}
+
+function toggleHowTo() {
+  const steps = document.getElementById('howToSteps');
+  const arrow = document.getElementById('howToArrow');
+  steps.classList.toggle('open');
+  arrow.textContent = steps.classList.contains('open') ? '↓' : '›';
+}
+
+function setupDrop() {
+  const dz = document.getElementById('dropZone');
+  if (!dz) return;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); processFile(e.dataTransfer.files[0]); });
+}
+
+async function processFile(file) {
+  if (!file) return;
+  showToast('⏳ Processing...');
+  try {
+    const zip = await JSZip.loadAsync(file);
+    const read = async name => { const f = zip.file(name); return f ? f.async('string') : null; };
+    const [chartRaw, queriesRaw, pagesRaw, devicesRaw] = await Promise.all([
+      read('Chart.csv'), read('Queries.csv'), read('Pages.csv'), read('Devices.csv')
+    ]);
+    const chart = chartRaw ? parseCSV(chartRaw) : [];
+    const queries = queriesRaw ? parseCSV(queriesRaw) : [];
+    const pages = pagesRaw ? parseCSV(pagesRaw) : [];
+    const devices = devicesRaw ? parseCSV(devicesRaw) : [];
+
+    const totalClicks = chart.reduce((s,r) => s + parseInt(r.Clicks||0), 0);
+    const totalImp = chart.reduce((s,r) => s + parseInt(r.Impressions||0), 0);
+    const avgCTR = totalImp > 0 ? ((totalClicks/totalImp)*100).toFixed(2) : '0';
+    const avgPos = chart.length > 0 ? (chart.reduce((s,r) => s + parseFloat(r.Position||0),0)/chart.length).toFixed(1) : '0';
+    const last7 = chart.slice(-7), prev7 = chart.slice(-14,-7);
+    const l7c = last7.reduce((s,r) => s+parseInt(r.Clicks||0),0);
+    const p7c = prev7.reduce((s,r) => s+parseInt(r.Clicks||0),0);
+    const l7i = last7.reduce((s,r) => s+parseInt(r.Impressions||0),0);
+    const p7i = prev7.reduce((s,r) => s+parseInt(r.Impressions||0),0);
+    const avgPosLast7 = last7.length > 0 ? (last7.reduce((s,r) => s+parseFloat(r.Position||0),0)/last7.length).toFixed(1) : avgPos;
+    const avgPosPrev7 = prev7.length > 0 ? (prev7.reduce((s,r) => s+parseFloat(r.Position||0),0)/prev7.length).toFixed(1) : avgPos;
+
+    parsedData = { chart, queries, pages, devices, totalClicks, totalImp, avgCTR, avgPos,
+      l7c, p7c, l7i, p7i, avgPosLast7, avgPosPrev7,
+      dateRange: chart.length > 0 ? `${chart[0].Date} → ${chart[chart.length-1].Date}` : '',
+      filename: file.name };
+    renderDashboard();
+  } catch(e) { showToast('❌ Error: ' + e.message); }
+}
+
+function renderDashboard() {
+  const d = parsedData;
+  const cd = parseInt(delta(d.l7c, d.p7c));
+  const id = parseInt(delta(d.l7i, d.p7i));
+  const pd = parseFloat(d.avgPosLast7) - parseFloat(d.avgPosPrev7);
+
+  // Alerts
+  let alerts = '';
+  if (cd < -10) alerts += `<div class="alert alert-warn"><div class="alert-label">⚠ Clicks Dropping</div><div class="alert-text">Clicks down ${Math.abs(cd)}% vs last week. Check for ranking drops on your key pages.</div></div>`;
+  if (id < -10) alerts += `<div class="alert alert-warn"><div class="alert-label">⚠ Impressions Down</div><div class="alert-text">Impressions dropped ${Math.abs(id)}% — could signal indexing or algorithm changes.</div></div>`;
+  if (pd > 3) alerts += `<div class="alert alert-warn"><div class="alert-label">⚠ Position Worsening</div><div class="alert-text">Average rank dropped ${pd.toFixed(1)} positions last week.</div></div>`;
+  if (cd >= 0 && id >= 0 && pd <= 0) alerts += `<div class="alert alert-good"><div class="alert-label">✓ Looking Good</div><div class="alert-text">No major drops detected this week. Keep it up!</div></div>`;
+
+  const topQueries = d.queries.slice(0,10).map((q,i) => `
+    <div class="table-row" style="grid-template-columns:1fr 50px 50px">
+      <div class="row-name">${q['Top queries']||'-'}</div>
+      <div class="row-num" style="color:var(--green)">${q.Clicks||0}</div>
+      <div class="row-num" style="color:var(--muted)">${parseFloat(q.Position||0).toFixed(1)}</div>
+    </div>`).join('');
+
+  const topPages = d.pages.slice(0,8).map((p,i) => {
+    const url = (p['Top pages']||'').replace('https://thevinylbiz.co.uk','') || '/';
+    return `<div class="table-row" style="grid-template-columns:1fr 50px 50px">
+      <div class="row-name url">${url}</div>
+      <div class="row-num" style="color:var(--green)">${p.Clicks||0}</div>
+      <div class="row-num" style="color:var(--muted)">${parseFloat(p.Position||0).toFixed(1)}</div>
+    </div>`;
+  }).join('');
+
+  const deviceColors = ['var(--green)','var(--blue)','var(--amber)'];
+  const devicePills = d.devices.map((dv,i) => `
+    <div class="device-pill">
+      <div class="device-name">${dv.Device||'?'}</div>
+      <div class="device-clicks" style="color:${deviceColors[i]||'#fff'}">${dv.Clicks||0}</div>
+      <div class="device-imp">${parseInt(dv.Impressions||0).toLocaleString()} impr</div>
+    </div>`).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div style="padding: 16px 16px 0; display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace">${d.dateRange}</div>
+      <div style="font-size:10px; color:#333; font-family:'JetBrains Mono',monospace">28d</div>
+    </div>
+
+    <div style="height:16px"></div>
+
+    ${alerts}
+
+    <div class="stats-grid">
+      <div class="stat-card" style="--accent:var(--green)">
+        <div class="stat-label">Clicks</div>
+        <div class="stat-value">${d.totalClicks}</div>
+        <div class="stat-delta ${cd>0?'up':cd<0?'down':'neutral'}">${cd>0?'↑':'↓'} ${Math.abs(cd)}% vs last 7d</div>
+      </div>
+      <div class="stat-card" style="--accent:var(--blue)">
+        <div class="stat-label">Impressions</div>
+        <div class="stat-value">${d.totalImp>999?(d.totalImp/1000).toFixed(1)+'k':d.totalImp}</div>
+        <div class="stat-delta ${id>0?'up':id<0?'down':'neutral'}">${id>0?'↑':'↓'} ${Math.abs(id)}% vs last 7d</div>
+      </div>
+      <div class="stat-card" style="--accent:var(--amber)">
+        <div class="stat-label">Avg CTR</div>
+        <div class="stat-value" style="font-size:22px">${d.avgCTR}%</div>
+        <div class="stat-delta neutral">28 day avg</div>
+      </div>
+      <div class="stat-card" style="--accent:#a855f7">
+        <div class="stat-label">Avg Position</div>
+        <div class="stat-value" style="font-size:22px">${d.avgPos}</div>
+        <div class="stat-delta ${pd<0?'up':pd>0?'down':'neutral'}">${pd>0?'↓ worse':'↑ better'} this week</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-tabs">
+        <button class="chart-tab active" onclick="switchChart('clicks',this)">Clicks</button>
+        <button class="chart-tab" onclick="switchChart('impressions',this)">Impressions</button>
+        <button class="chart-tab" onclick="switchChart('position',this)">Position</button>
+      </div>
+      <canvas id="mainChart"></canvas>
+    </div>
+
+    <div class="section-title">Top Queries</div>
+    <div class="table-card">
+      <div class="table-col-heads" style="grid-template-columns:1fr 50px 50px">
+        <span>Query</span><span style="text-align:right">Clicks</span><span style="text-align:right">Pos</span>
+      </div>
+      ${topQueries}
+    </div>
+
+    <div class="section-title">Top Pages</div>
+    <div class="table-card">
+      <div class="table-col-heads" style="grid-template-columns:1fr 50px 50px">
+        <span>Page</span><span style="text-align:right">Clicks</span><span style="text-align:right">Pos</span>
+      </div>
+      ${topPages}
+    </div>
+
+    <div class="section-title">Devices</div>
+    <div class="devices">${devicePills}</div>
+
+    <button class="reset-btn" onclick="resetApp()">← Load new export</button>
+  `;
+
+  initChart('clicks');
+  addEmailButton();
+}
+
+function switchChart(type, btn) {
+  document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  initChart(type);
+}
+
+function initChart(type) {
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  const ctx = document.getElementById('mainChart');
+  if (!ctx || !parsedData) return;
+  const cfg = {
+    clicks: { color: '#00e87a', label: 'Clicks', key: 'Clicks' },
+    impressions: { color: '#4f8ef7', label: 'Impressions', key: 'Impressions' },
+    position: { color: '#a855f7', label: 'Position', key: 'Position', reverse: true }
+  }[type];
+  const labels = parsedData.chart.map(r => r.Date?.slice(5));
+  const values = parsedData.chart.map(r => parseFloat(r[cfg.key]||0));
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values, borderColor: cfg.color, backgroundColor: cfg.color+'15',
+        fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: '#1a1a1a', borderColor: '#333', borderWidth: 1,
+        titleColor: '#888', bodyColor: '#fff', titleFont: { family: 'JetBrains Mono', size: 11 },
+        bodyFont: { family: 'JetBrains Mono', size: 13 }
+      }},
+      scales: {
+        x: { ticks: { color: '#444', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 7 }, grid: { color: '#111' } },
+        y: { ticks: { color: '#444', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#111' }, reverse: !!cfg.reverse }
+      }
+    }
+  });
+}
+
+function addEmailButton() {
+  const existing = document.getElementById('emailBtn');
+  if (existing) existing.remove();
+  const btn = document.createElement('button');
+  btn.id = 'emailBtn';
+  btn.className = 'email-btn';
+  btn.textContent = '📧 Email Report';
+  btn.onclick = sendEmail;
+  document.body.appendChild(btn);
+}
+
+let sending = false;
+async function sendEmail() {
+  if (sending || !parsedData) return;
+  sending = true;
+  const btn = document.getElementById('emailBtn');
+  btn.classList.add('loading');
+  btn.textContent = '⏳ Sending...';
+
+  const d = parsedData;
+  const summary = `GSC Weekly Report - thevinylbiz.co.uk
+Period: ${d.dateRange}
+
+📊 28-DAY OVERVIEW
+• Total Clicks: ${d.totalClicks}
+• Total Impressions: ${d.totalImp.toLocaleString()}
+• Avg CTR: ${d.avgCTR}%
+• Avg Position: ${d.avgPos}
+
+📈 LAST 7 DAYS VS PRIOR 7
+• Clicks: ${d.l7c} vs ${d.p7c} (${delta(d.l7c,d.p7c)}%)
+• Impressions: ${d.l7i.toLocaleString()} vs ${d.p7i.toLocaleString()} (${delta(d.l7i,d.p7i)}%)
+• Position: ${d.avgPosLast7} vs ${d.avgPosPrev7}
+
+🔍 TOP 5 QUERIES
+${d.queries.slice(0,5).map((q,i) => `${i+1}. ${q['Top queries']} — ${q.Clicks} clicks, pos ${parseFloat(q.Position).toFixed(1)}`).join('\n')}
+
+📄 TOP 5 PAGES
+${d.pages.slice(0,5).map((p,i) => `${i+1}. ${(p['Top pages']||'').replace('https://thevinylbiz.co.uk','')||'/'} — ${p.Clicks} clicks`).join('\n')}
+
+📱 DEVICES
+${d.devices.map(dv => `• ${dv.Device}: ${dv.Clicks} clicks, ${parseInt(dv.Impressions).toLocaleString()} impressions`).join('\n')}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: `Send an email to myself with subject "📊 GSC Weekly Report - thevinylbiz.co.uk" and this exact body:\n\n${summary}` }],
+        mcp_servers: [{ type: 'url', url: GMAIL_MCP, name: 'gmail' }]
+      })
+    });
+    const json = await res.json();
+    const text = json.content?.find(b => b.type === 'text')?.text || '';
+    if (text.toLowerCase().includes('sent') || text.toLowerCase().includes('email')) {
+      btn.classList.remove('loading');
+      btn.classList.add('sent');
+      btn.textContent = '✅ Report Sent!';
+      showToast('📧 Check your Gmail!');
+    } else {
+      btn.textContent = '📧 Email Report';
+      showToast('⚠️ May have sent — check Gmail');
+    }
+  } catch(e) {
+    btn.textContent = '📧 Email Report';
+    showToast('❌ Send failed');
+  }
+  sending = false;
+  btn.classList.remove('loading');
+}
+
+function resetApp() {
+  parsedData = null;
+  const btn = document.getElementById('emailBtn');
+  if (btn) btn.remove();
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  renderUpload();
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+renderUpload();
+</script>
+</body>
+</html>
