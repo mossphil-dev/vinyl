@@ -5,542 +5,495 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="VinylBiz GSC">
-<meta name="theme-color" content="#050505">
-<title>VinylBiz GSC</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-title" content="VinylBiz SEO">
+<meta name="theme-color" content="#030303">
+<title>VinylBiz SEO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --green: #00e87a;
-    --blue: #4f8ef7;
-    --amber: #f5a623;
-    --bg: #050505;
-    --card: #0f0f0f;
-    --border: #1c1c1c;
-    --text: #f0f0f0;
-    --muted: #555;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; overscroll-behavior: none; }
-  
-  #app { min-height: 100vh; display: flex; flex-direction: column; }
-
-  /* Header */
-  .header {
-    padding: calc(var(--safe-top) + 16px) 20px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    background: rgba(5,5,5,0.95);
-    backdrop-filter: blur(10px);
-    position: sticky; top: 0; z-index: 100;
-  }
-  .header-brand { display: flex; flex-direction: column; }
-  .header-sub { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); font-family: 'JetBrains Mono', monospace; }
-  .header-title { font-size: 20px; font-weight: 800; color: #fff; line-height: 1.1; }
-  .header-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-align: right; }
-
-  /* Scrollable content */
-  .content { flex: 1; overflow-y: auto; padding: 0 0 calc(var(--safe-bottom) + 80px); }
-
-  /* Drop zone */
-  .drop-zone {
-    margin: 24px 16px;
-    border: 2px dashed var(--border);
-    border-radius: 16px;
-    padding: 56px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: var(--card);
-    position: relative;
-    overflow: hidden;
-  }
-  .drop-zone.drag { border-color: var(--green); background: #0a1f14; }
-  .drop-zone::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 50% 100%, rgba(0,232,122,0.05) 0%, transparent 70%);
-  }
-  .drop-icon { font-size: 44px; margin-bottom: 12px; display: block; }
-  .drop-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-  .drop-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
-  .drop-sub strong { color: var(--green); }
-  #fileInput { display: none; }
-
-  /* How to section */
-  .how-to { margin: 0 16px 24px; background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
-  .how-to-header { padding: 14px 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-  .how-to-header span { font-size: 13px; font-weight: 600; color: var(--muted); }
-  .how-to-steps { padding: 0 16px 16px; display: none; }
-  .how-to-steps.open { display: block; }
-  .step { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
-  .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--green); color: #000; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .step-text { font-size: 13px; color: #aaa; line-height: 1.5; padding-top: 3px; }
-
-  /* Stats grid */
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 16px 16px; }
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-  .stat-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--accent);
-  }
-  .stat-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
-  .stat-value { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; font-family: 'JetBrains Mono', monospace; }
-  .stat-delta { font-size: 11px; margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
-  .stat-delta.up { color: var(--green); }
-  .stat-delta.down { color: #ff4f4f; }
-  .stat-delta.neutral { color: var(--muted); }
-
-  /* Section heading */
-  .section-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 0 16px; margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
-
-  /* Chart card */
-  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin: 0 16px 16px; padding: 16px; }
-  .chart-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
-  .chart-tab { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); transition: all 0.15s; font-family: 'Syne', sans-serif; }
-  .chart-tab.active { background: var(--green); color: #000; border-color: var(--green); }
-  canvas { max-height: 180px; }
-
-  /* Table card */
-  .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin: 0 16px 16px; overflow: hidden; }
-  .table-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  .table-header-title { font-size: 13px; font-weight: 700; color: #fff; }
-  .table-col-heads { display: grid; padding: 8px 16px; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
-  .table-row { padding: 11px 16px; border-top: 1px solid #111; display: grid; align-items: center; transition: background 0.1s; }
-  .table-row:active { background: #1a1a1a; }
-  .row-name { font-size: 13px; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .row-name.url { color: #888; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
-  .row-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; }
-
-  /* Device pills */
-  .devices { display: flex; gap: 10px; margin: 0 16px 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-  .devices::-webkit-scrollbar { display: none; }
-  .device-pill { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; flex-shrink: 0; text-align: center; min-width: 110px; }
-  .device-name { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
-  .device-clicks { font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
-  .device-imp { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-  /* Email button */
-  .email-btn {
-    position: fixed;
-    bottom: calc(var(--safe-bottom) + 20px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--green);
-    color: #000;
-    border: none;
-    border-radius: 50px;
-    padding: 16px 36px;
-    font-size: 15px;
-    font-weight: 700;
-    font-family: 'Syne', sans-serif;
-    cursor: pointer;
-    box-shadow: 0 8px 32px rgba(0,232,122,0.3);
-    transition: all 0.2s;
-    white-space: nowrap;
-    z-index: 200;
-  }
-  .email-btn:active { transform: translateX(-50%) scale(0.97); }
-  .email-btn.sent { background: #1a3a2a; color: var(--green); box-shadow: none; }
-  .email-btn.loading { opacity: 0.7; }
-
-  /* Toast */
-  .toast {
-    position: fixed; bottom: calc(var(--safe-bottom) + 90px); left: 50%; transform: translateX(-50%);
-    background: #1a1a1a; border: 1px solid #333; color: #ccc;
-    padding: 12px 20px; border-radius: 30px; font-size: 13px;
-    z-index: 300; white-space: nowrap;
-    animation: slideUp 0.3s ease;
-  }
-  @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-
-  /* Date strip */
-  .date-strip { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 20px; overflow-x: auto; scrollbar-width: none; }
-  .date-strip::-webkit-scrollbar { display: none; }
-  .date-chip { flex-shrink: 0; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
-  .date-chip-label { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-  .date-chip-val { font-size: 13px; font-weight: 700; color: var(--text); }
-
-  .divider { height: 1px; background: var(--border); margin: 4px 16px 20px; }
-
-  /* Alerts */
-  .alert { margin: 0 16px 16px; border-radius: 12px; padding: 14px 16px; border: 1px solid; }
-  .alert-warn { background: #1a1200; border-color: #3a2800; }
-  .alert-good { background: #0a1f14; border-color: #1a4028; }
-  .alert-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
-  .alert-warn .alert-label { color: var(--amber); }
-  .alert-good .alert-label { color: var(--green); }
-  .alert-text { font-size: 13px; color: #aaa; line-height: 1.5; }
-
-  .reset-btn { display: block; margin: 0 auto 24px; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 10px 24px; border-radius: 30px; font-size: 13px; font-family: 'Syne', sans-serif; cursor: pointer; }
+:root{--bg:#030303;--surface:#0c0c0c;--surface2:#141414;--border:#1f1f1f;--border2:#2a2a2a;--text:#f5f5f0;--muted:#555;--muted2:#888;--green:#b8f566;--green-dim:#2a3d10;--blue:#6eb5ff;--blue-dim:#0d1f33;--amber:#ffc46b;--amber-dim:#2e1f08;--red:#ff6b6b;--red-dim:#2e0d0d;--purple:#c084fc;--purple-dim:#1e0d33;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overscroll-behavior:none}
+.nav{position:sticky;top:0;z-index:200;background:rgba(3,3,3,0.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:calc(var(--safe-top) + 12px) 20px 0}
+.nav-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px}
+.brand-name{font-family:'Instrument Serif',serif;font-size:22px;color:#fff;line-height:1}
+.brand-sub{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.nav-actions{display:flex;gap:8px;align-items:center}
+.nav-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);padding:8px 14px;border-radius:30px;font-size:12px;font-family:'Outfit',sans-serif;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.nav-btn.primary{background:var(--green);color:#000;border-color:var(--green);font-weight:600}
+.nav-tabs{display:flex;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px}
+.nav-tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:10px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+.content{padding-bottom:calc(var(--safe-bottom) + 24px)}
+.section{display:none}.section.active{display:block}
+.pad{padding:20px 16px}
+.upload-wrap{min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px}
+.upload-logo{font-family:'Instrument Serif',serif;font-size:72px;color:var(--green);margin-bottom:6px;line-height:1;text-align:center}
+.upload-tagline{font-size:15px;color:var(--muted2);text-align:center;margin-bottom:36px}
+.drop-zone{width:100%;border:1.5px dashed var(--border2);border-radius:20px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface)}
+.drop-zone.drag{border-color:var(--green);background:var(--green-dim)}
+.drop-icon{font-size:36px;margin-bottom:14px}
+.drop-title{font-size:17px;font-weight:600;color:#fff;margin-bottom:8px}
+.drop-hint{font-size:13px;color:var(--muted);line-height:1.6}
+.drop-hint b{color:var(--green);font-weight:500}
+#fileInput{display:none}
+.steps-card{width:100%;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.steps-toggle{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.steps-toggle span{font-size:13px;color:var(--muted2);font-weight:500}
+.steps-body{padding:0 18px 16px;display:none}.steps-body.open{display:block}
+.step-row{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--green);color:#000;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-txt{font-size:13px;color:var(--muted2);line-height:1.5}.step-txt b{color:var(--text);font-weight:500}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden}
+.card-head{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.card-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.card-badge{font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);padding:3px 8px;border-radius:20px}
+.card-body{padding:16px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--green))}
+.stat-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:'JetBrains Mono',monospace}
+.stat-val{font-size:26px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;line-height:1}
+.stat-delta{font-size:11px;margin-top:6px;font-family:'JetBrains Mono',monospace}
+.up{color:var(--green)}.down{color:var(--red)}.neutral{color:var(--muted)}
+.chart-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.ctab{padding:6px 14px;border-radius:30px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);transition:all .15s;font-family:'Outfit',sans-serif}
+.ctab.active{background:var(--green);color:#000;border-color:var(--green)}
+canvas{max-height:190px!important}
+.tbl-head{display:grid;padding:8px 16px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;border-bottom:1px solid var(--border)}
+.tbl-row{display:grid;padding:11px 16px;border-bottom:1px solid #0f0f0f;align-items:center;transition:background .1s}
+.tbl-row:last-child{border-bottom:none}
+.tbl-row:active{background:var(--surface2)}
+.tbl-name{font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl-name.mono{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2)}
+.tbl-num{font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right}
+.job{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #0f0f0f;align-items:flex-start}
+.job:last-child{border-bottom:none}
+.job-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.job-body{flex:1;min-width:0}
+.job-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
+.job-desc{font-size:12px;color:var(--muted2);line-height:1.5}
+.job-meta{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.job-pill{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.pill-high{background:var(--red-dim);color:var(--red);border:1px solid #3d1212}
+.pill-med{background:var(--amber-dim);color:var(--amber);border:1px solid #3d2a0a}
+.pill-low{background:var(--green-dim);color:var(--green);border:1px solid #2a3d10}
+.pill-info{background:var(--blue-dim);color:var(--blue);border:1px solid #0d2540}
+.cluster{margin-bottom:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.cluster-head{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.cluster-name{font-size:14px;font-weight:600;color:var(--text)}
+.cluster-count{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.cluster-body{display:none;border-top:1px solid var(--border)}.cluster-body.open{display:block}
+.cluster-kw{padding:9px 16px;font-size:12px;color:var(--muted2);border-bottom:1px solid #0f0f0f;display:flex;justify-content:space-between}
+.cluster-kw:last-child{border-bottom:none}
+.qw{padding:12px 16px;border-bottom:1px solid #0f0f0f}
+.qw:last-child{border-bottom:none}
+.qw-query{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.qw-meta{display:flex;gap:10px;flex-wrap:wrap}
+.qw-stat{font-size:11px;font-family:'JetBrains Mono',monospace}
+.qw-tip{font-size:12px;color:var(--muted2);margin-top:6px;line-height:1.5}
+.opp{padding:12px 16px;border-bottom:1px solid #0f0f0f}
+.opp:last-child{border-bottom:none}
+.opp-bar-wrap{height:4px;background:var(--surface2);border-radius:2px;margin:8px 0;overflow:hidden}
+.opp-bar{height:100%;background:var(--amber);border-radius:2px}
+.alert{border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid}
+.alert-warn{background:var(--amber-dim);border-color:#3d2a0a}
+.alert-good{background:var(--green-dim);border-color:#2a3d10}
+.alert-bad{background:var(--red-dim);border-color:#3d1212}
+.alert-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:'JetBrains Mono',monospace;margin-bottom:5px;font-weight:600}
+.alert-warn .alert-label{color:var(--amber)}.alert-good .alert-label{color:var(--green)}.alert-bad .alert-label{color:var(--red)}
+.alert-text{font-size:13px;color:var(--muted2);line-height:1.5}
+.devices{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.devices::-webkit-scrollbar{display:none}
+.dev{flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 18px;text-align:center;min-width:100px}
+.dev-name{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.dev-val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.dev-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.ai-loading{display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:12px}
+.ai-spinner{width:36px;height:36px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-text{font-size:13px;color:var(--muted2)}
+.ai-result{font-size:14px;color:var(--muted2);line-height:1.7;white-space:pre-wrap}
+.ai-result strong{color:var(--text);font-weight:600}
+.coll{padding:12px 16px;border-bottom:1px solid #0f0f0f}
+.coll:last-child{border-bottom:none}
+.coll-name{font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.coll-desc{font-size:12px;color:var(--muted2);line-height:1.5;margin-bottom:6px}
+.coll-kws{display:flex;flex-wrap:wrap;gap:5px}
+.coll-kw{font-size:11px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);padding:3px 9px;border-radius:20px}
+.toast{position:fixed;bottom:calc(var(--safe-bottom) + 24px);left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:12px 20px;border-radius:30px;font-size:13px;z-index:999;white-space:nowrap;animation:slideUp .25s ease;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;margin:20px 0 10px}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
+.tbl-tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
 </style>
 </head>
 <body>
-<div id="app">
-  <div class="header">
-    <div class="header-brand">
-      <span class="header-sub">thevinylbiz.co.uk</span>
-      <span class="header-title">GSC Monitor</span>
+
+<div class="nav" id="nav" style="display:none">
+  <div class="nav-top">
+    <div>
+      <div class="brand-name">VinylBiz</div>
+      <div class="brand-sub">SEO Monitor</div>
     </div>
-    <div class="header-date" id="headerDate"></div>
+    <div class="nav-actions">
+      <button class="nav-btn" onclick="resetApp()">↩ Reset</button>
+      <button class="nav-btn primary" id="emailBtn" onclick="sendEmail()">✉ Email</button>
+    </div>
   </div>
-  <div class="content" id="content">
-    <!-- Filled by JS -->
+  <div class="nav-tabs">
+    <div class="tab active" onclick="showTab('overview')">Overview</div>
+    <div class="tab" onclick="showTab('quickwins')">Quick Wins</div>
+    <div class="tab" onclick="showTab('jobs')">Job List</div>
+    <div class="tab" onclick="showTab('clusters')">Clusters</div>
+    <div class="tab" onclick="showTab('collections')">Collections</div>
+    <div class="tab" onclick="showTab('ctr')">CTR Opps</div>
+    <div class="tab" onclick="showTab('queries')">Queries</div>
+    <div class="tab" onclick="showTab('pages')">Pages</div>
+    <div class="tab" onclick="showTab('ai')">AI Insights</div>
+  </div>
+</div>
+
+<div class="content">
+  <div id="upload-screen">
+    <div class="upload-wrap">
+      <div class="upload-logo">◈</div>
+      <p class="upload-tagline">Your SEO command centre</p>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-icon">📂</div>
+        <div class="drop-title">Drop your GSC export</div>
+        <div class="drop-hint">Tap to select zip file<br><b>Search Console → Performance → Export → Download CSV</b></div>
+      </div>
+      <input type="file" id="fileInput" accept=".zip">
+      <div class="steps-card">
+        <div class="steps-toggle" onclick="toggleSteps()">
+          <span>📖 How to export from GSC</span>
+          <span id="stepsArrow" style="color:var(--muted);font-size:18px">›</span>
+        </div>
+        <div class="steps-body" id="stepsBody">
+          <div class="step-row"><div class="step-num">1</div><div class="step-txt">Open <b>Google Search Console</b></div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-txt">Tap <b>Performance → Search results</b></div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-txt">Tap <b>↓ Export</b> top right</div></div>
+          <div class="step-row"><div class="step-num">4</div><div class="step-txt">Choose <b>Download CSV (zip)</b></div></div>
+          <div class="step-row"><div class="step-num">5</div><div class="step-txt">Come back and tap the box above</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard" style="display:none">
+    <div id="sec-overview" class="section active pad">
+      <div id="alerts-wrap"></div>
+      <div class="stat-grid" id="stats-wrap"></div>
+      <div class="section-label">28-day trend</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="chart-tabs">
+            <button class="ctab active" onclick="switchChart('clicks',this)">Clicks</button>
+            <button class="ctab" onclick="switchChart('impressions',this)">Impressions</button>
+            <button class="ctab" onclick="switchChart('position',this)">Position</button>
+          </div>
+          <canvas id="mainChart"></canvas>
+        </div>
+      </div>
+      <div class="section-label">Devices</div>
+      <div class="devices" id="devices-wrap"></div>
+    </div>
+
+    <div id="sec-quickwins" class="section pad">
+      <div class="alert alert-good" style="margin-bottom:16px">
+        <div class="alert-label">💡 Quick Wins</div>
+        <div class="alert-text">Queries ranking position 11–20 — just off page 1. Small improvements can push these to page 1 and drive real traffic fast.</div>
+      </div>
+      <div class="card"><div class="card-head"><span class="card-title">🎯 Push These to Page 1</span></div><div id="quickwins-wrap"></div></div>
+    </div>
+
+    <div id="sec-jobs" class="section pad">
+      <div class="alert alert-warn" style="margin-bottom:16px">
+        <div class="alert-label">📋 Your SEO Job List</div>
+        <div class="alert-text">Prioritised tasks based on your actual GSC data. Start from the top.</div>
+      </div>
+      <div class="card" id="jobs-wrap"></div>
+    </div>
+
+    <div id="sec-clusters" class="section pad">
+      <div class="alert alert-good" style="margin-bottom:16px">
+        <div class="alert-label">🔤 Keyword Clusters</div>
+        <div class="alert-text">Your queries grouped by theme. Each cluster = a topic your site should own. Tap to expand.</div>
+      </div>
+      <div id="clusters-wrap"></div>
+    </div>
+
+    <div id="sec-collections" class="section pad">
+      <div class="alert alert-good" style="margin-bottom:16px">
+        <div class="alert-label">🗂 Suggested Collections</div>
+        <div class="alert-text">New Shopify collections to create based on what people are searching for. Each is a traffic opportunity.</div>
+      </div>
+      <div class="card" id="collections-wrap"></div>
+    </div>
+
+    <div id="sec-ctr" class="section pad">
+      <div class="alert alert-warn" style="margin-bottom:16px">
+        <div class="alert-label">📈 CTR Opportunities</div>
+        <div class="alert-text">Pages showing up in search but not getting clicked. Fix the title tags and meta descriptions to win more clicks.</div>
+      </div>
+      <div class="card" id="ctr-wrap"></div>
+    </div>
+
+    <div id="sec-queries" class="section pad">
+      <div class="card">
+        <div class="card-head"><span class="card-title">🔍 All Queries</span><span class="card-badge" id="queries-count"></span></div>
+        <div class="tbl-head" style="grid-template-columns:1fr 48px 48px 54px"><span>Query</span><span style="text-align:right">Clicks</span><span style="text-align:right">Pos</span><span style="text-align:right">CTR</span></div>
+        <div id="queries-wrap"></div>
+      </div>
+    </div>
+
+    <div id="sec-pages" class="section pad">
+      <div class="card">
+        <div class="card-head"><span class="card-title">📄 All Pages</span><span class="card-badge" id="pages-count"></span></div>
+        <div class="tbl-head" style="grid-template-columns:1fr 48px 48px 54px"><span>Page</span><span style="text-align:right">Clicks</span><span style="text-align:right">Pos</span><span style="text-align:right">CTR</span></div>
+        <div id="pages-wrap"></div>
+      </div>
+    </div>
+
+    <div id="sec-ai" class="section pad">
+      <div class="card">
+        <div class="card-head"><span class="card-title">🤖 AI Insights</span><button class="nav-btn" onclick="runAI()" id="aiRunBtn">Run Analysis</button></div>
+        <div id="ai-wrap" class="card-body"><p style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">Tap "Run Analysis" for AI-powered insights on your SEO data.</p></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-const GMAIL_MCP = "https://gmail.mcp.claude.com/mcp";
-let chartInstance = null;
-let parsedData = null;
+const GMAIL_MCP='https://gmail.mcp.claude.com/mcp';
+let D=null,chartInst=null;
 
-// Set header date
-document.getElementById('headerDate').innerHTML = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}).replace(/ /g,'<br>');
+function csv(t){const l=t.trim().split('\n');const h=l[0].split(',').map(x=>x.trim().replace(/"/g,''));return l.slice(1).map(r=>{const v=r.split(',').map(x=>x.trim().replace(/"/g,''));return Object.fromEntries(h.map((k,i)=>[k,v[i]||'']))})}
+function pct(v){return parseFloat((v||'0%').replace('%',''))||0}
+function num(v){return parseInt(v||0)}
+function flt(v){return parseFloat(v||0)}
+function delta(a,b){if(!b)return null;return(((a-b)/b)*100).toFixed(0)}
 
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
-  return lines.slice(1).map(line => {
-    const vals = line.split(',').map(v => v.trim().replace(/"/g,''));
-    return Object.fromEntries(headers.map((h,i) => [h, vals[i] || '']));
-  });
+document.getElementById('fileInput').addEventListener('change',e=>processFile(e.target.files[0]));
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');processFile(e.dataTransfer.files[0])});
+
+function toggleSteps(){const b=document.getElementById('stepsBody'),a=document.getElementById('stepsArrow');b.classList.toggle('open');a.textContent=b.classList.contains('open')?'↓':'›'}
+
+async function processFile(file){
+  if(!file)return;
+  toast('⏳ Processing...');
+  try{
+    const zip=await JSZip.loadAsync(file);
+    const read=async n=>{const f=zip.file(n);return f?f.async('string'):null};
+    const[chartRaw,queriesRaw,pagesRaw,devicesRaw]=await Promise.all([read('Chart.csv'),read('Queries.csv'),read('Pages.csv'),read('Devices.csv')]);
+    const chart=chartRaw?csv(chartRaw):[];
+    const queries=queriesRaw?csv(queriesRaw):[];
+    const pages=pagesRaw?csv(pagesRaw):[];
+    const devices=devicesRaw?csv(devicesRaw):[];
+    const totalClicks=chart.reduce((s,r)=>s+num(r.Clicks),0);
+    const totalImp=chart.reduce((s,r)=>s+num(r.Impressions),0);
+    const avgCTR=totalImp>0?((totalClicks/totalImp)*100).toFixed(2):'0';
+    const avgPos=chart.length?(chart.reduce((s,r)=>s+flt(r.Position),0)/chart.length).toFixed(1):'0';
+    const last7=chart.slice(-7),prev7=chart.slice(-14,-7);
+    const l7c=last7.reduce((s,r)=>s+num(r.Clicks),0),p7c=prev7.reduce((s,r)=>s+num(r.Clicks),0);
+    const l7i=last7.reduce((s,r)=>s+num(r.Impressions),0),p7i=prev7.reduce((s,r)=>s+num(r.Impressions),0);
+    const l7p=last7.length?(last7.reduce((s,r)=>s+flt(r.Position),0)/last7.length).toFixed(1):avgPos;
+    const p7p=prev7.length?(prev7.reduce((s,r)=>s+flt(r.Position),0)/prev7.length).toFixed(1):avgPos;
+    D={chart,queries,pages,devices,totalClicks,totalImp,avgCTR,avgPos,l7c,p7c,l7i,p7i,l7p,p7p,dateRange:chart.length?`${chart[0].Date} → ${chart[chart.length-1].Date}`:'',filename:file.name};
+    buildDashboard();
+    toast('✅ Loaded!');
+  }catch(e){toast('❌ '+e.message)}
 }
 
-function delta(a, b) {
-  if (!b || b == 0) return null;
-  return (((a - b) / b) * 100).toFixed(0);
+function buildDashboard(){
+  document.getElementById('upload-screen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('nav').style.display='block';
+  buildOverview();buildQuickWins();buildJobs();buildClusters();buildCollections();buildCTR();buildQueries();buildPages();
 }
 
-function renderUpload() {
-  document.getElementById('content').innerHTML = `
-    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-      <span class="drop-icon">📊</span>
-      <div class="drop-title">Drop GSC Export</div>
-      <div class="drop-sub">Tap to select your zip file<br><strong>Search Console → Export → Download CSV</strong></div>
-    </div>
-    <input type="file" id="fileInput" accept=".zip">
-
-    <div class="how-to">
-      <div class="how-to-header" onclick="toggleHowTo()">
-        <span>📖 How to export from GSC</span>
-        <span style="margin-left:auto;color:var(--muted);font-size:18px" id="howToArrow">›</span>
-      </div>
-      <div class="how-to-steps" id="howToSteps">
-        <div class="step"><div class="step-num">1</div><div class="step-text">Open <strong style="color:#fff">Google Search Console</strong> on your phone browser</div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-text">Tap <strong style="color:#fff">Performance → Search results</strong></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-text">Tap the <strong style="color:#fff">↓ Export</strong> button (top right)</div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-text">Choose <strong style="color:#fff">Download CSV (zip)</strong></div></div>
-        <div class="step"><div class="step-num">5</div><div class="step-text">Come back here and tap the box above to select the zip</div></div>
-      </div>
-    </div>
-  `;
-  document.getElementById('fileInput').addEventListener('change', e => processFile(e.target.files[0]));
-  setupDrop();
-}
-
-function toggleHowTo() {
-  const steps = document.getElementById('howToSteps');
-  const arrow = document.getElementById('howToArrow');
-  steps.classList.toggle('open');
-  arrow.textContent = steps.classList.contains('open') ? '↓' : '›';
-}
-
-function setupDrop() {
-  const dz = document.getElementById('dropZone');
-  if (!dz) return;
-  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
-  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); processFile(e.dataTransfer.files[0]); });
-}
-
-async function processFile(file) {
-  if (!file) return;
-  showToast('⏳ Processing...');
-  try {
-    const zip = await JSZip.loadAsync(file);
-    const read = async name => { const f = zip.file(name); return f ? f.async('string') : null; };
-    const [chartRaw, queriesRaw, pagesRaw, devicesRaw] = await Promise.all([
-      read('Chart.csv'), read('Queries.csv'), read('Pages.csv'), read('Devices.csv')
-    ]);
-    const chart = chartRaw ? parseCSV(chartRaw) : [];
-    const queries = queriesRaw ? parseCSV(queriesRaw) : [];
-    const pages = pagesRaw ? parseCSV(pagesRaw) : [];
-    const devices = devicesRaw ? parseCSV(devicesRaw) : [];
-
-    const totalClicks = chart.reduce((s,r) => s + parseInt(r.Clicks||0), 0);
-    const totalImp = chart.reduce((s,r) => s + parseInt(r.Impressions||0), 0);
-    const avgCTR = totalImp > 0 ? ((totalClicks/totalImp)*100).toFixed(2) : '0';
-    const avgPos = chart.length > 0 ? (chart.reduce((s,r) => s + parseFloat(r.Position||0),0)/chart.length).toFixed(1) : '0';
-    const last7 = chart.slice(-7), prev7 = chart.slice(-14,-7);
-    const l7c = last7.reduce((s,r) => s+parseInt(r.Clicks||0),0);
-    const p7c = prev7.reduce((s,r) => s+parseInt(r.Clicks||0),0);
-    const l7i = last7.reduce((s,r) => s+parseInt(r.Impressions||0),0);
-    const p7i = prev7.reduce((s,r) => s+parseInt(r.Impressions||0),0);
-    const avgPosLast7 = last7.length > 0 ? (last7.reduce((s,r) => s+parseFloat(r.Position||0),0)/last7.length).toFixed(1) : avgPos;
-    const avgPosPrev7 = prev7.length > 0 ? (prev7.reduce((s,r) => s+parseFloat(r.Position||0),0)/prev7.length).toFixed(1) : avgPos;
-
-    parsedData = { chart, queries, pages, devices, totalClicks, totalImp, avgCTR, avgPos,
-      l7c, p7c, l7i, p7i, avgPosLast7, avgPosPrev7,
-      dateRange: chart.length > 0 ? `${chart[0].Date} → ${chart[chart.length-1].Date}` : '',
-      filename: file.name };
-    renderDashboard();
-  } catch(e) { showToast('❌ Error: ' + e.message); }
-}
-
-function renderDashboard() {
-  const d = parsedData;
-  const cd = parseInt(delta(d.l7c, d.p7c));
-  const id = parseInt(delta(d.l7i, d.p7i));
-  const pd = parseFloat(d.avgPosLast7) - parseFloat(d.avgPosPrev7);
-
-  // Alerts
-  let alerts = '';
-  if (cd < -10) alerts += `<div class="alert alert-warn"><div class="alert-label">⚠ Clicks Dropping</div><div class="alert-text">Clicks down ${Math.abs(cd)}% vs last week. Check for ranking drops on your key pages.</div></div>`;
-  if (id < -10) alerts += `<div class="alert alert-warn"><div class="alert-label">⚠ Impressions Down</div><div class="alert-text">Impressions dropped ${Math.abs(id)}% — could signal indexing or algorithm changes.</div></div>`;
-  if (pd > 3) alerts += `<div class="alert alert-warn"><div class="alert-label">⚠ Position Worsening</div><div class="alert-text">Average rank dropped ${pd.toFixed(1)} positions last week.</div></div>`;
-  if (cd >= 0 && id >= 0 && pd <= 0) alerts += `<div class="alert alert-good"><div class="alert-label">✓ Looking Good</div><div class="alert-text">No major drops detected this week. Keep it up!</div></div>`;
-
-  const topQueries = d.queries.slice(0,10).map((q,i) => `
-    <div class="table-row" style="grid-template-columns:1fr 50px 50px">
-      <div class="row-name">${q['Top queries']||'-'}</div>
-      <div class="row-num" style="color:var(--green)">${q.Clicks||0}</div>
-      <div class="row-num" style="color:var(--muted)">${parseFloat(q.Position||0).toFixed(1)}</div>
-    </div>`).join('');
-
-  const topPages = d.pages.slice(0,8).map((p,i) => {
-    const url = (p['Top pages']||'').replace('https://thevinylbiz.co.uk','') || '/';
-    return `<div class="table-row" style="grid-template-columns:1fr 50px 50px">
-      <div class="row-name url">${url}</div>
-      <div class="row-num" style="color:var(--green)">${p.Clicks||0}</div>
-      <div class="row-num" style="color:var(--muted)">${parseFloat(p.Position||0).toFixed(1)}</div>
-    </div>`;
-  }).join('');
-
-  const deviceColors = ['var(--green)','var(--blue)','var(--amber)'];
-  const devicePills = d.devices.map((dv,i) => `
-    <div class="device-pill">
-      <div class="device-name">${dv.Device||'?'}</div>
-      <div class="device-clicks" style="color:${deviceColors[i]||'#fff'}">${dv.Clicks||0}</div>
-      <div class="device-imp">${parseInt(dv.Impressions||0).toLocaleString()} impr</div>
-    </div>`).join('');
-
-  document.getElementById('content').innerHTML = `
-    <div style="padding: 16px 16px 0; display:flex; align-items:center; justify-content:space-between;">
-      <div style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace">${d.dateRange}</div>
-      <div style="font-size:10px; color:#333; font-family:'JetBrains Mono',monospace">28d</div>
-    </div>
-
-    <div style="height:16px"></div>
-
-    ${alerts}
-
-    <div class="stats-grid">
-      <div class="stat-card" style="--accent:var(--green)">
-        <div class="stat-label">Clicks</div>
-        <div class="stat-value">${d.totalClicks}</div>
-        <div class="stat-delta ${cd>0?'up':cd<0?'down':'neutral'}">${cd>0?'↑':'↓'} ${Math.abs(cd)}% vs last 7d</div>
-      </div>
-      <div class="stat-card" style="--accent:var(--blue)">
-        <div class="stat-label">Impressions</div>
-        <div class="stat-value">${d.totalImp>999?(d.totalImp/1000).toFixed(1)+'k':d.totalImp}</div>
-        <div class="stat-delta ${id>0?'up':id<0?'down':'neutral'}">${id>0?'↑':'↓'} ${Math.abs(id)}% vs last 7d</div>
-      </div>
-      <div class="stat-card" style="--accent:var(--amber)">
-        <div class="stat-label">Avg CTR</div>
-        <div class="stat-value" style="font-size:22px">${d.avgCTR}%</div>
-        <div class="stat-delta neutral">28 day avg</div>
-      </div>
-      <div class="stat-card" style="--accent:#a855f7">
-        <div class="stat-label">Avg Position</div>
-        <div class="stat-value" style="font-size:22px">${d.avgPos}</div>
-        <div class="stat-delta ${pd<0?'up':pd>0?'down':'neutral'}">${pd>0?'↓ worse':'↑ better'} this week</div>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <div class="chart-tabs">
-        <button class="chart-tab active" onclick="switchChart('clicks',this)">Clicks</button>
-        <button class="chart-tab" onclick="switchChart('impressions',this)">Impressions</button>
-        <button class="chart-tab" onclick="switchChart('position',this)">Position</button>
-      </div>
-      <canvas id="mainChart"></canvas>
-    </div>
-
-    <div class="section-title">Top Queries</div>
-    <div class="table-card">
-      <div class="table-col-heads" style="grid-template-columns:1fr 50px 50px">
-        <span>Query</span><span style="text-align:right">Clicks</span><span style="text-align:right">Pos</span>
-      </div>
-      ${topQueries}
-    </div>
-
-    <div class="section-title">Top Pages</div>
-    <div class="table-card">
-      <div class="table-col-heads" style="grid-template-columns:1fr 50px 50px">
-        <span>Page</span><span style="text-align:right">Clicks</span><span style="text-align:right">Pos</span>
-      </div>
-      ${topPages}
-    </div>
-
-    <div class="section-title">Devices</div>
-    <div class="devices">${devicePills}</div>
-
-    <button class="reset-btn" onclick="resetApp()">← Load new export</button>
-  `;
-
+function buildOverview(){
+  const d=D;
+  const cd=parseInt(delta(d.l7c,d.p7c)||0);
+  const id=parseInt(delta(d.l7i,d.p7i)||0);
+  const pd=(flt(d.l7p)-flt(d.p7p)).toFixed(1);
+  let alerts='';
+  if(cd<-15)alerts+=`<div class="alert alert-bad"><div class="alert-label">⚠ Clicks Dropping Fast</div><div class="alert-text">Down ${Math.abs(cd)}% vs last week. Check Quick Wins tab for ranking losses.</div></div>`;
+  else if(cd<0)alerts+=`<div class="alert alert-warn"><div class="alert-label">↓ Clicks Slightly Down</div><div class="alert-text">Down ${Math.abs(cd)}% — worth keeping an eye on.</div></div>`;
+  if(id<-10)alerts+=`<div class="alert alert-warn"><div class="alert-label">↓ Impressions Falling</div><div class="alert-text">Down ${Math.abs(id)}% — possible ranking drops or indexing issues.</div></div>`;
+  if(parseFloat(pd)>3)alerts+=`<div class="alert alert-warn"><div class="alert-label">↓ Rankings Slipping</div><div class="alert-text">Average position worsened by ${pd} places this week.</div></div>`;
+  if(cd>=0&&id>=0)alerts+=`<div class="alert alert-good"><div class="alert-label">✓ Trending Up</div><div class="alert-text">Clicks and impressions both up this week. Keep it up!</div></div>`;
+  document.getElementById('alerts-wrap').innerHTML=alerts;
+  document.getElementById('stats-wrap').innerHTML=`
+    <div class="stat" style="--accent:var(--green)"><div class="stat-label">Clicks</div><div class="stat-val">${d.totalClicks}</div><div class="stat-delta ${cd>=0?'up':'down'}">${cd>=0?'↑':'↓'} ${Math.abs(cd)}% last 7d</div></div>
+    <div class="stat" style="--accent:var(--blue)"><div class="stat-label">Impressions</div><div class="stat-val">${d.totalImp>999?(d.totalImp/1000).toFixed(1)+'k':d.totalImp}</div><div class="stat-delta ${id>=0?'up':'down'}">${id>=0?'↑':'↓'} ${Math.abs(id)}% last 7d</div></div>
+    <div class="stat" style="--accent:var(--amber)"><div class="stat-label">Avg CTR</div><div class="stat-val">${d.avgCTR}%</div><div class="stat-delta neutral">28 day avg</div></div>
+    <div class="stat" style="--accent:var(--purple)"><div class="stat-label">Avg Position</div><div class="stat-val">${d.avgPos}</div><div class="stat-delta ${parseFloat(pd)<=0?'up':'down'}">${parseFloat(pd)<=0?'↑ improving':'↓ dropping'}</div></div>`;
+  const dc=['var(--green)','var(--blue)','var(--amber)'];
+  document.getElementById('devices-wrap').innerHTML=D.devices.map((dv,i)=>`<div class="dev"><div class="dev-name">${dv.Device}</div><div class="dev-val" style="color:${dc[i]||'#fff'}">${num(dv.Clicks)}</div><div class="dev-sub">${num(dv.Impressions).toLocaleString()} impr</div></div>`).join('');
   initChart('clicks');
-  addEmailButton();
 }
 
-function switchChart(type, btn) {
-  document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  initChart(type);
+function initChart(type){
+  if(chartInst){chartInst.destroy();chartInst=null}
+  const ctx=document.getElementById('mainChart');
+  if(!ctx||!D)return;
+  const cfg={clicks:{color:'#b8f566',key:'Clicks'},impressions:{color:'#6eb5ff',key:'Impressions'},position:{color:'#c084fc',key:'Position',reverse:true}}[type];
+  chartInst=new Chart(ctx,{type:'line',data:{labels:D.chart.map(r=>r.Date?.slice(5)),datasets:[{data:D.chart.map(r=>flt(r[cfg.key])),borderColor:cfg.color,backgroundColor:cfg.color+'18',fill:true,tension:0.35,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a1a',borderColor:'#2a2a2a',borderWidth:1,titleColor:'#666',bodyColor:'#fff',titleFont:{family:'JetBrains Mono',size:11},bodyFont:{family:'JetBrains Mono',size:13}}},scales:{x:{ticks:{color:'#444',font:{family:'JetBrains Mono',size:10},maxTicksLimit:7},grid:{color:'#111'}},y:{ticks:{color:'#444',font:{family:'JetBrains Mono',size:10}},grid:{color:'#111'},reverse:!!cfg.reverse}}}});
 }
 
-function initChart(type) {
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-  const ctx = document.getElementById('mainChart');
-  if (!ctx || !parsedData) return;
-  const cfg = {
-    clicks: { color: '#00e87a', label: 'Clicks', key: 'Clicks' },
-    impressions: { color: '#4f8ef7', label: 'Impressions', key: 'Impressions' },
-    position: { color: '#a855f7', label: 'Position', key: 'Position', reverse: true }
-  }[type];
-  const labels = parsedData.chart.map(r => r.Date?.slice(5));
-  const values = parsedData.chart.map(r => parseFloat(r[cfg.key]||0));
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data: values, borderColor: cfg.color, backgroundColor: cfg.color+'15',
-        fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: { legend: { display: false }, tooltip: {
-        backgroundColor: '#1a1a1a', borderColor: '#333', borderWidth: 1,
-        titleColor: '#888', bodyColor: '#fff', titleFont: { family: 'JetBrains Mono', size: 11 },
-        bodyFont: { family: 'JetBrains Mono', size: 13 }
-      }},
-      scales: {
-        x: { ticks: { color: '#444', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 7 }, grid: { color: '#111' } },
-        y: { ticks: { color: '#444', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#111' }, reverse: !!cfg.reverse }
+function switchChart(type,btn){document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');initChart(type)}
+
+function buildQuickWins(){
+  const wins=D.queries.filter(q=>flt(q.Position)>=11&&flt(q.Position)<=20&&num(q.Impressions)>5).sort((a,b)=>num(b.Impressions)-num(a.Impressions)).slice(0,15);
+  if(!wins.length){document.getElementById('quickwins-wrap').innerHTML='<div class="empty-state">No page 2 queries found with enough impressions.</div>';return}
+  document.getElementById('quickwins-wrap').innerHTML=wins.map(q=>{
+    const pos=flt(q.Position).toFixed(1);
+    const tip=pos<13?'Very close to page 1 — add more internal links to this page and refresh the content with more detail.':pos<16?'Add more depth to the target page and build internal links from related pages.':'Create a dedicated collection or guide page if one doesn\'t exist yet.';
+    return`<div class="qw"><div class="qw-query">${q['Top queries']}</div><div class="qw-meta"><span class="qw-stat" style="color:var(--amber)">Pos ${pos}</span><span class="qw-stat" style="color:var(--blue)">${num(q.Impressions)} impr</span><span class="qw-stat" style="color:var(--muted2)">${num(q.Clicks)} clicks</span></div><div class="qw-tip">💡 ${tip}</div></div>`;
+  }).join('');
+}
+
+function buildJobs(){
+  const jobs=[];
+  const cd=parseInt(delta(D.l7c,D.p7c)||0);
+  const quickWins=D.queries.filter(q=>flt(q.Position)>=11&&flt(q.Position)<=20);
+  const lowCTR=D.pages.filter(p=>num(p.Impressions)>50&&pct(p.CTR)<1);
+  const clusters=buildClusterData();
+  if(cd<-10)jobs.push({icon:'📉',bg:'var(--red-dim)',title:'Investigate click drop',desc:`Clicks dropped ${Math.abs(cd)}% this week. Check which pages lost rankings and look for technical issues or recent content changes.`,priority:'high',type:'Analysis'});
+  if(quickWins.length>0)jobs.push({icon:'🎯',bg:'var(--green-dim)',title:`Push ${Math.min(quickWins.length,5)} queries to page 1`,desc:`You have ${quickWins.length} queries on page 2. Add internal links, improve title tags, and refresh content on those pages.`,priority:'high',type:'On-Page'});
+  if(lowCTR.length>0)jobs.push({icon:'✍️',bg:'var(--amber-dim)',title:`Rewrite ${lowCTR.length} title tags`,desc:'These pages appear in search but aren\'t getting clicked. Rewrite meta titles to be more specific and compelling, with the keyword near the start.',priority:'high',type:'On-Page'});
+  jobs.push({icon:'🔗',bg:'var(--blue-dim)',title:'Build backlinks to top pages',desc:'Your top 3 pages need external links. Reach out to vinyl, craft, or automotive blogs for guest posts, features, or product reviews.',priority:'high',type:'Off-Page'});
+  jobs.push({icon:'🏗️',bg:'var(--purple-dim)',title:'Improve internal linking structure',desc:'Link from blog posts and your homepage to top collection pages. Every collection should have 3–5 internal links pointing to it.',priority:'med',type:'On-Page'});
+  if(clusters.length>0)jobs.push({icon:'📂',bg:'var(--green-dim)',title:`Build a "${clusters[0].name}" hub page`,desc:`Your top keyword cluster has ${clusters[0].count} queries. A dedicated hub page will help consolidate rankings and drive more traffic.`,priority:'med',type:'Content'});
+  jobs.push({icon:'🗂️',bg:'var(--amber-dim)',title:'Add Product schema markup',desc:'Add structured data to product and collection pages. This can unlock rich snippets in Google which improve CTR significantly.',priority:'med',type:'Technical'});
+  jobs.push({icon:'⚡',bg:'var(--blue-dim)',title:'Fix mobile Core Web Vitals',desc:'Most of your traffic is mobile. Run top pages through PageSpeed Insights and fix LCP, CLS or FID issues.',priority:'med',type:'Technical'});
+  jobs.push({icon:'📝',bg:'var(--purple-dim)',title:'Write buying guides for top categories',desc:'Long-form buying guides attract backlinks naturally and rank for informational queries. Start with your best-selling categories.',priority:'low',type:'Content'});
+  jobs.push({icon:'🏷️',bg:'var(--green-dim)',title:'Optimise all collection meta descriptions',desc:'Write unique, compelling meta descriptions under 160 chars for every collection. Include keywords and a call to action.',priority:'low',type:'On-Page'});
+  jobs.push({icon:'🌐',bg:'var(--blue-dim)',title:'Re-submit sitemap to GSC',desc:'After adding new collections or pages, re-submit your sitemap in Google Search Console to speed up indexing.',priority:'low',type:'Technical'});
+  jobs.push({icon:'⭐',bg:'var(--amber-dim)',title:'Get more product reviews',desc:'Product reviews improve CTR via star ratings in search results. Email past customers asking for reviews.',priority:'low',type:'Off-Page'});
+  const po={high:0,med:1,low:2};jobs.sort((a,b)=>po[a.priority]-po[b.priority]);
+  document.getElementById('jobs-wrap').innerHTML=jobs.map(j=>`<div class="job"><div class="job-icon" style="background:${j.bg}">${j.icon}</div><div class="job-body"><div class="job-title">${j.title}</div><div class="job-desc">${j.desc}</div><div class="job-meta"><span class="job-pill ${j.priority==='high'?'pill-high':j.priority==='med'?'pill-med':'pill-low'}">${j.priority.toUpperCase()}</span><span class="job-pill pill-info">${j.type}</span></div></div></div>`).join('');
+}
+
+function buildClusterData(){
+  const queries=D.queries.map(q=>({kw:q['Top queries']||'',clicks:num(q.Clicks),impressions:num(q.Impressions),position:flt(q.Position)}));
+  const themeWords=[['vw','transporter','campervan','van','camper','volkswagen'],['wall sticker','wall decal','wall art','mural','wall vinyl','wall'],['restaurant','cafe','coffee','food','kitchen','bar','pub','takeaway','burger'],['car','vehicle','auto','bonnet','roof','boot','wrap'],['wedding','personalised','custom','bespoke','name'],['shop','retail','business','commercial','office'],['kids','nursery','children','bedroom','playroom'],['sports','football','gym','fitness','bike']];
+  const themeNames=['VW & Campervan Graphics','Wall Stickers & Decals','Restaurant & Hospitality','Car & Vehicle Graphics','Personalised & Custom','Business & Commercial','Kids & Nursery','Sports & Fitness'];
+  const themes={};
+  const matched=new Set();
+  queries.forEach(q=>{
+    const kw=q.kw.toLowerCase();
+    themeWords.forEach((words,i)=>{
+      if(words.some(w=>kw.includes(w))){
+        const name=themeNames[i];
+        if(!themes[name])themes[name]=[];
+        if(!matched.has(q.kw)){themes[name].push(q);matched.add(q.kw)}
       }
-    }
-  });
-}
-
-function addEmailButton() {
-  const existing = document.getElementById('emailBtn');
-  if (existing) existing.remove();
-  const btn = document.createElement('button');
-  btn.id = 'emailBtn';
-  btn.className = 'email-btn';
-  btn.textContent = '📧 Email Report';
-  btn.onclick = sendEmail;
-  document.body.appendChild(btn);
-}
-
-let sending = false;
-async function sendEmail() {
-  if (sending || !parsedData) return;
-  sending = true;
-  const btn = document.getElementById('emailBtn');
-  btn.classList.add('loading');
-  btn.textContent = '⏳ Sending...';
-
-  const d = parsedData;
-  const summary = `GSC Weekly Report - thevinylbiz.co.uk
-Period: ${d.dateRange}
-
-📊 28-DAY OVERVIEW
-• Total Clicks: ${d.totalClicks}
-• Total Impressions: ${d.totalImp.toLocaleString()}
-• Avg CTR: ${d.avgCTR}%
-• Avg Position: ${d.avgPos}
-
-📈 LAST 7 DAYS VS PRIOR 7
-• Clicks: ${d.l7c} vs ${d.p7c} (${delta(d.l7c,d.p7c)}%)
-• Impressions: ${d.l7i.toLocaleString()} vs ${d.p7i.toLocaleString()} (${delta(d.l7i,d.p7i)}%)
-• Position: ${d.avgPosLast7} vs ${d.avgPosPrev7}
-
-🔍 TOP 5 QUERIES
-${d.queries.slice(0,5).map((q,i) => `${i+1}. ${q['Top queries']} — ${q.Clicks} clicks, pos ${parseFloat(q.Position).toFixed(1)}`).join('\n')}
-
-📄 TOP 5 PAGES
-${d.pages.slice(0,5).map((p,i) => `${i+1}. ${(p['Top pages']||'').replace('https://thevinylbiz.co.uk','')||'/'} — ${p.Clicks} clicks`).join('\n')}
-
-📱 DEVICES
-${d.devices.map(dv => `• ${dv.Device}: ${dv.Clicks} clicks, ${parseInt(dv.Impressions).toLocaleString()} impressions`).join('\n')}`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: `Send an email to myself with subject "📊 GSC Weekly Report - thevinylbiz.co.uk" and this exact body:\n\n${summary}` }],
-        mcp_servers: [{ type: 'url', url: GMAIL_MCP, name: 'gmail' }]
-      })
     });
-    const json = await res.json();
-    const text = json.content?.find(b => b.type === 'text')?.text || '';
-    if (text.toLowerCase().includes('sent') || text.toLowerCase().includes('email')) {
-      btn.classList.remove('loading');
-      btn.classList.add('sent');
-      btn.textContent = '✅ Report Sent!';
-      showToast('📧 Check your Gmail!');
-    } else {
-      btn.textContent = '📧 Email Report';
-      showToast('⚠️ May have sent — check Gmail');
-    }
-  } catch(e) {
-    btn.textContent = '📧 Email Report';
-    showToast('❌ Send failed');
-  }
-  sending = false;
-  btn.classList.remove('loading');
+  });
+  return Object.entries(themes).filter(([,v])=>v.length>0).map(([name,kws])=>({name,count:kws.length,totalClicks:kws.reduce((s,k)=>s+k.clicks,0),totalImp:kws.reduce((s,k)=>s+k.impressions,0),keywords:kws.sort((a,b)=>b.impressions-a.impressions).slice(0,8)})).sort((a,b)=>b.totalImp-a.totalImp);
 }
 
-function resetApp() {
-  parsedData = null;
-  const btn = document.getElementById('emailBtn');
-  if (btn) btn.remove();
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-  renderUpload();
+function buildClusters(){
+  const clusters=buildClusterData();
+  if(!clusters.length){document.getElementById('clusters-wrap').innerHTML='<div class="empty-state">Not enough data to cluster.</div>';return}
+  document.getElementById('clusters-wrap').innerHTML=clusters.map((c,i)=>`<div class="cluster"><div class="cluster-head" onclick="toggleCluster(${i})"><div class="cluster-name">${c.name}</div><div style="display:flex;align-items:center;gap:8px"><span class="cluster-count">${c.count} queries · ${c.totalClicks} clicks</span><span style="color:var(--muted);font-size:16px" id="ca-${i}">›</span></div></div><div class="cluster-body" id="cb-${i}">${c.keywords.map(k=>`<div class="cluster-kw"><span>${k.kw}</span><span style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px">${k.clicks}c · pos ${k.position.toFixed(1)}</span></div>`).join('')}</div></div>`).join('');
 }
 
-function showToast(msg) {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+function toggleCluster(i){const b=document.getElementById(`cb-${i}`),a=document.getElementById(`ca-${i}`);b.classList.toggle('open');a.textContent=b.classList.contains('open')?'↓':'›'}
+
+function buildCollections(){
+  const clusters=buildClusterData();
+  const existing=D.pages.map(p=>(p['Top pages']||'').toLowerCase());
+  const colls=clusters.map(c=>{const slug=c.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');const exists=existing.some(u=>u.includes(slug.split('-')[0]));return{...c,slug,exists}});
+  document.getElementById('collections-wrap').innerHTML=colls.map(c=>`<div class="coll"><div class="coll-name">${c.exists?'✅':'🆕'} ${c.name} ${!c.exists?'<span class="tbl-tag" style="background:var(--green-dim);color:var(--green);border:1px solid #2a3d10">Create</span>':'<span class="tbl-tag" style="background:var(--surface2);color:var(--muted2);border:1px solid var(--border2)">Optimise</span>'}</div><div class="coll-desc">${c.totalImp.toLocaleString()} impressions · ${c.totalClicks} clicks · ${c.count} related queries</div><div class="coll-kws">${c.keywords.slice(0,5).map(k=>`<span class="coll-kw">${k.kw}</span>`).join('')}</div></div>`).join('');
 }
 
-renderUpload();
+function buildCTR(){
+  const opps=D.pages.filter(p=>num(p.Impressions)>30).map(p=>({url:(p['Top pages']||'').replace('https://thevinylbiz.co.uk','')||'/',clicks:num(p.Clicks),impressions:num(p.Impressions),ctr:pct(p.CTR),pos:flt(p.Position)})).sort((a,b)=>(b.impressions*(1-b.ctr/100))-(a.impressions*(1-a.ctr/100))).slice(0,12);
+  document.getElementById('ctr-wrap').innerHTML=opps.map(p=>{
+    const missed=Math.round(p.impressions*0.05-p.clicks);
+    const tip=p.ctr<1?'Very low CTR — rewrite title to be more specific. Add numbers, power words, or the exact query.':p.ctr<3?'Below average — test a more specific title and add a benefit to the meta description.':'Decent CTR — small tweaks could push this further.';
+    return`<div class="opp"><div class="tbl-name mono">${p.url}</div><div class="opp-bar-wrap"><div class="opp-bar" style="width:${Math.min(100,p.ctr*3)}%"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span class="qw-stat" style="color:var(--amber)">CTR ${p.ctr.toFixed(1)}%</span><span class="qw-stat" style="color:var(--blue)">${p.impressions.toLocaleString()} impr</span><span class="qw-stat" style="color:var(--muted2)">pos ${p.pos.toFixed(1)}</span>${missed>0?`<span class="qw-stat" style="color:var(--red)">~${missed} missed clicks</span>`:''}</div><div class="qw-tip">💡 ${tip}</div></div>`;
+  }).join('');
+}
+
+function buildQueries(){
+  document.getElementById('queries-count').textContent=D.queries.length+' queries';
+  document.getElementById('queries-wrap').innerHTML=D.queries.slice(0,60).map(q=>{const pos=flt(q.Position);const pc=pos<=10?'var(--green)':pos<=20?'var(--amber)':'var(--muted2)';return`<div class="tbl-row" style="grid-template-columns:1fr 48px 48px 54px"><div class="tbl-name">${q['Top queries']||'-'}</div><div class="tbl-num" style="color:var(--green)">${num(q.Clicks)}</div><div class="tbl-num" style="color:${pc}">${pos.toFixed(1)}</div><div class="tbl-num" style="color:var(--muted2)">${q.CTR||'0%'}</div></div>`}).join('');
+}
+
+function buildPages(){
+  document.getElementById('pages-count').textContent=D.pages.length+' pages';
+  document.getElementById('pages-wrap').innerHTML=D.pages.slice(0,30).map(p=>{const url=(p['Top pages']||'').replace('https://thevinylbiz.co.uk','')||'/';return`<div class="tbl-row" style="grid-template-columns:1fr 48px 48px 54px"><div class="tbl-name mono">${url}</div><div class="tbl-num" style="color:var(--green)">${num(p.Clicks)}</div><div class="tbl-num" style="color:var(--muted2)">${flt(p.Position).toFixed(1)}</div><div class="tbl-num" style="color:var(--muted2)">${p.CTR||'0%'}</div></div>`}).join('');
+}
+
+async function runAI(){
+  const btn=document.getElementById('aiRunBtn');
+  btn.textContent='⏳...';btn.disabled=true;
+  document.getElementById('ai-wrap').innerHTML='<div class="ai-loading"><div class="ai-spinner"></div><div class="ai-text">Claude is analysing your data...</div></div>';
+  const summary=`Website: thevinylbiz.co.uk (vinyl stickers & graphics ecommerce, UK)
+Period: ${D.dateRange}
+Total Clicks: ${D.totalClicks} | Impressions: ${D.totalImp} | Avg CTR: ${D.avgCTR}% | Avg Position: ${D.avgPos}
+Last 7d: ${D.l7c} clicks / ${D.l7i} impressions vs prior: ${D.p7c} / ${D.p7i}
+Top queries: ${D.queries.slice(0,10).map(q=>`${q['Top queries']}(${q.Clicks}clicks,pos${parseFloat(q.Position).toFixed(1)})`).join(', ')}
+Top pages: ${D.pages.slice(0,8).map(p=>`${(p['Top pages']||'').replace('https://thevinylbiz.co.uk','')||'/'}(${p.Clicks}clicks,CTR${p.CTR})`).join(', ')}
+Page 2 queries: ${D.queries.filter(q=>flt(q.Position)>=11&&flt(q.Position)<=20).length}
+Low CTR pages: ${D.pages.filter(p=>num(p.Impressions)>50&&pct(p.CTR)<1).length}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`You are an SEO expert. Analyse this Google Search Console data for a UK vinyl stickers ecommerce store. Give 5-6 specific, actionable insights. Be direct and practical. Use **bold** for key terms.\n\n${summary}`}]})});
+    const json=await res.json();
+    const text=json.content?.find(b=>b.type==='text')?.text||'No response.';
+    document.getElementById('ai-wrap').innerHTML=`<div class="ai-result">${text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>`;
+  }catch(e){document.getElementById('ai-wrap').innerHTML=`<div class="ai-result" style="color:var(--red)">Error: ${e.message}</div>`}
+  btn.textContent='↻ Re-run';btn.disabled=false;
+}
+
+async function sendEmail(){
+  if(!D)return;
+  const btn=document.getElementById('emailBtn');
+  btn.textContent='⏳';
+  const qw=D.queries.filter(q=>flt(q.Position)>=11&&flt(q.Position)<=20).length;
+  const body=`GSC Report — thevinylbiz.co.uk\n${D.dateRange}\n\nSTATS\nClicks: ${D.totalClicks} | Impressions: ${D.totalImp.toLocaleString()} | CTR: ${D.avgCTR}% | Avg Position: ${D.avgPos}\nLast 7d clicks: ${D.l7c} vs ${D.p7c} prior\n\nQUICK WINS\n${qw} queries on page 2 ready to push to page 1\n\nTOP QUERIES\n${D.queries.slice(0,5).map((q,i)=>`${i+1}. ${q['Top queries']} — ${q.Clicks} clicks, pos ${flt(q.Position).toFixed(1)}`).join('\n')}\n\nTOP PAGES\n${D.pages.slice(0,5).map((p,i)=>`${i+1}. ${(p['Top pages']||'').replace('https://thevinylbiz.co.uk','')||'/'} — ${p.Clicks} clicks, CTR ${p.CTR}`).join('\n')}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:`Send an email to myself with subject "📊 GSC Report - thevinylbiz.co.uk" and body:\n\n${body}`}],mcp_servers:[{type:'url',url:GMAIL_MCP,name:'gmail'}]})});
+    const json=await res.json();
+    const text=json.content?.find(b=>b.type==='text')?.text||'';
+    btn.textContent=text.toLowerCase().includes('sent')?'✅ Sent':'✉ Email';
+    toast('📧 Report emailed!');
+  }catch(e){btn.textContent='✉ Email';toast('❌ Failed')}
+}
+
+function showTab(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  const tabs=['overview','quickwins','jobs','clusters','collections','ctr','queries','pages','ai'];
+  document.querySelectorAll('.tab')[tabs.indexOf(id)]?.classList.add('active');
+  if(id==='overview'&&!chartInst)initChart('clicks');
+}
+
+function resetApp(){
+  D=null;if(chartInst){chartInst.destroy();chartInst=null}
+  document.getElementById('upload-screen').style.display='block';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('nav').style.display='none';
+  document.getElementById('fileInput').value='';
+}
+
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
 </script>
 </body>
 </html>
